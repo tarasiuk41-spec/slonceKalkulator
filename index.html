@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050816">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator fotowoltaiczny</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@500;600;700&display=swap">
+<style>
+:root{--bg:#050816;--hd:#070b1c;--cd:#0e1829;--in:#030712;--ln:#1b2a40;--tx:#f1f5f9;--mu:#8a9bb4;--g:#10d98a;--y:#fbbf24;--b:#3b82f6;--r:#f43f5e;--gd:#0a3d34;
+--sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"JetBrains Mono",ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef3f8;--hd:#fff;--cd:#fff;--in:#f1f5f9;--ln:#d5dfeb;--tx:#0f1b2d;--mu:#5b6d85;--g:#05a868;--y:#c98a04;--b:#2563eb;--r:#e11d48;--gd:#d3f5e6;color-scheme:light}}
+:root[data-theme="light"]{--bg:#eef3f8;--hd:#fff;--cd:#fff;--in:#f1f5f9;--ln:#d5dfeb;--tx:#0f1b2d;--mu:#5b6d85;--g:#05a868;--y:#c98a04;--b:#2563eb;--r:#e11d48;--gd:#d3f5e6;color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:500 16px/1.4 var(--sans)}
+header{background:var(--hd);border-bottom:1px solid var(--ln);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:16px;background:var(--g);display:grid;place-items:center;box-shadow:0 6px 18px color-mix(in srgb,var(--g) 40%,transparent)}
+.logo svg{width:26px;height:26px;stroke:#04130d;fill:none;stroke-width:2;stroke-linejoin:round}
+.ttl{flex:1;font:800 1.05rem/1.1 var(--mono);letter-spacing:.14em}
+.ttl small{display:block;margin-top:4px;color:var(--g);font:700 .66rem var(--mono);letter-spacing:.2em}
+.yr{display:flex;align-items:center;background:var(--cd);border:1px solid var(--ln);border-radius:18px}
+.yr button{background:none;border:0;color:var(--mu);font:700 1.2rem var(--mono);padding:8px 12px}
+.yr b{font:800 1.05rem var(--mono);min-width:3.2em;text-align:center}
+main{max-width:560px;margin:0 auto;padding:16px 14px 120px}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:28px;padding:22px 20px;margin-bottom:16px}
+.lb{display:flex;align-items:center;gap:10px;font:700 .72rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin:0 0 10px}
+.lb i{width:10px;height:10px;border-radius:50%}
+.big{font:800 2.5rem/1.1 var(--mono);letter-spacing:-.02em;margin:0 0 12px}
+.big small{font:700 1rem var(--mono);color:var(--mu);letter-spacing:0;margin-left:4px}
+.pill{display:inline-flex;gap:8px;align-items:baseline;padding:9px 16px;border-radius:999px;border:1px solid;font:700 .95rem var(--mono)}
+.pill small{font:700 .72rem var(--sans);letter-spacing:.1em;text-transform:uppercase}
+.sep{height:1px;background:var(--ln);margin:20px 0}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 18px}
+.chips button{background:var(--in);border:1px solid transparent;border-radius:18px;padding:15px 0;color:var(--mu);font:700 .95rem var(--sans);letter-spacing:.12em;text-transform:uppercase;position:relative}
+.chips button.has::after{content:"";position:absolute;top:7px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--g)}
+.chips button.on{background:var(--g);color:#04130d;box-shadow:0 8px 22px color-mix(in srgb,var(--g) 35%,transparent)}
+.chips button.on::after{background:#04130d}
+.fld{display:flex;align-items:center;background:var(--in);border:1px solid var(--ln);border-radius:24px;padding:4px 22px;margin-bottom:20px}
+.fld input{flex:1;min-width:0;background:none;border:0;color:var(--tx);font:800 1.9rem var(--mono);padding:16px 0}
+.fld input::placeholder{color:var(--mu);opacity:.5;font-size:1.1rem}
+.fld input:focus{outline:0}.fld:focus-within{border-color:var(--g)}
+.fld span{font:700 .8rem var(--sans);letter-spacing:.1em;color:var(--mu);text-transform:uppercase}
+.btn{width:100%;border:0;border-radius:22px;padding:17px;background:var(--g);color:#04130d;font:800 1rem var(--sans);letter-spacing:.06em}
+.btn.sec{background:none;border:1px solid var(--ln);color:var(--r);margin-top:10px}
+.msg{margin:12px 0 0;color:var(--r);font-size:.88rem}
+.hint{color:var(--mu);font-size:.84rem;margin:12px 0 0}
+.row2{display:flex;justify-content:space-between;align-items:center;background:var(--in);border:1px solid var(--ln);border-radius:22px;padding:16px 22px;margin-bottom:18px}
+.row2 span{font:700 .8rem var(--sans);letter-spacing:.14em;color:var(--mu);text-transform:uppercase}.row2 b{font:800 1.4rem var(--mono)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font:600 .8rem var(--mono);white-space:nowrap}
+th,td{padding:9px 7px;text-align:right;border-bottom:1px solid var(--ln)}
+th{color:var(--mu);font:700 .66rem var(--sans);letter-spacing:.1em;text-transform:uppercase}
+th:first-child,td:first-child{text-align:left}
+tfoot td{font-weight:800;border-top:2px solid var(--ln);border-bottom:0}
+svg text{fill:var(--mu);font:600 9px var(--mono)}
+.leg{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--mu);margin-top:8px}.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.empty{color:var(--mu);text-align:center;padding:10px 0}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--hd);border-top:1px solid var(--ln);display:flex;justify-content:space-around;padding:8px 6px calc(10px + env(safe-area-inset-bottom,0px))}
+nav button{background:none;border:0;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:4px;font:700 .76rem var(--sans);padding:0}
+nav .ic{width:64px;height:40px;border-radius:20px;display:grid;place-items:center}
+nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-selected="true"]{color:var(--tx)}
+nav button[aria-selected="true"] .ic{background:var(--gd);color:var(--g)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+.btn.alt{background:none;border:1px solid var(--g);color:var(--g);margin-top:10px}
+.tip{margin-top:10px;background:var(--in);border:1px solid var(--ln);border-radius:18px;padding:12px 16px;font:600 .85rem/1.6 var(--mono);color:var(--mu);min-height:3.2em}
+.tip b{color:var(--tx);font:800 .95rem var(--mono)}
+svg[role=img]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chips.mini{grid-template-columns:repeat(6,1fr);gap:6px}.chips.mini button{padding:10px 0;font-size:.74rem;letter-spacing:.06em;border-radius:14px}
+svg text.vl{fill:var(--tx);font-weight:700}
+.bigw{font:800 2.8rem/1.1 var(--mono);letter-spacing:-.02em;margin:12px 0 16px;color:var(--tx)}
+.kv{border-top:1px solid var(--ln);padding:18px 0 6px}.kv:last-child{padding-bottom:0}
+.kr{display:flex;align-items:center;gap:10px}
+.kl{flex:1;font:700 .74rem/1.5 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+.bd{font:800 .85rem var(--sans);padding:8px 12px;border:1px solid;border-radius:999px}
+.kvv{font:800 1.15rem/1.3 var(--mono);text-align:right;min-width:30%}
+.kvv small{font:800 .95rem var(--mono)}
+.kvv em{display:block;font:normal 700 .85rem var(--mono)}
+.kd{color:var(--mu);font-size:.88rem;margin:10px 0 12px}
+.bn{display:flex;gap:10px;align-items:center;justify-content:space-between;background:color-mix(in srgb,var(--y) 12%,var(--cd));border:1px solid color-mix(in srgb,var(--y) 40%,transparent);border-radius:20px;padding:12px 16px;margin-bottom:12px;font-size:.88rem}
+.bn button{background:var(--y);color:#1a1200;border:0;border-radius:14px;padding:9px 14px;font:800 .8rem var(--sans);white-space:nowrap}
+</style>
+<script src="xlsx.full.min.js"></script>
+</head>
+<body>
+<header>
+<div class="logo"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div>
+<div class="ttl">KALKULATOR PV<small>ANDROID EDITION</small></div>
+<div class="yr"><button id="yp" aria-label="Poprzedni rok">‹</button><b id="yl"></b><button id="yn" aria-label="Następny rok">›</button></div>
+</header>
+<main>
+
+<section id="s0">
+<div id="bnr"></div>
+<div class="card" id="res"></div>
+<div class="card">
+<p class="lb"><i style="background:var(--g)"></i>Miesiąc odczytu</p>
+<div class="chips" id="chips"></div>
+<div class="row2"><span>Wybrany rok:</span><b id="yb"></b></div>
+<p class="lb"><i style="background:var(--y)"></i>Produkcja falownika w miesiącu</p>
+<div class="fld"><input id="fp" inputmode="decimal" autocomplete="off"><span>kWh</span></div>
+<p class="lb"><i style="background:var(--r)"></i>Stan licznika 1.8.0 (pobór)</p>
+<div class="fld"><input id="fi" inputmode="decimal" autocomplete="off"><span>kWh</span></div>
+<p class="lb"><i style="background:var(--g)"></i>Stan licznika 2.8.0 (oddanie)</p>
+<div class="fld"><input id="fe" inputmode="decimal" autocomplete="off"><span>kWh</span></div>
+<p class="lb"><i style="background:var(--b)"></i>Cena energii</p>
+<div class="fld"><input id="fc" inputmode="decimal" autocomplete="off"><span>zł/kWh</span></div>
+<button class="btn" id="sv">Zapisz odczyt</button>
+<button class="btn sec" id="dl" hidden>Usuń odczyt</button>
+<div class="msg" id="msg" role="alert"></div>
+<p class="hint">Wpisz stany liczników na koniec miesiąca. Pierwszy odczyt jest punktem startowym – wyniki liczą się od drugiego.</p>
+</div>
+<div class="card"><p class="lb"><i style="background:var(--g)"></i>Struktura energii</p>
+<div class="chips mini" id="schips"></div>
+<svg id="c3" viewBox="0 0 340 245" width="100%" role="img" aria-label="Struktura energii w miesiącu"></svg>
+<div class="tip" id="c3t" role="status"></div></div>
+</section>
+
+<section id="s1" hidden>
+<div id="ysum"></div>
+<div class="card"><p class="lb"><i style="background:var(--g)"></i>Produkcja w miesiącach</p>
+<svg id="c1" viewBox="0 0 340 200" width="100%" role="img" aria-label="Wykres produkcji"></svg>
+<div class="tip" id="c1t" role="status"></div>
+<div class="leg"><span><i style="background:var(--g)"></i>Zużyte na miejscu</span><span><i style="background:var(--y)"></i>Oddane do sieci</span></div></div>
+<div class="card"><p class="lb"><i style="background:var(--y)"></i>Zużycie w miesiącach</p>
+<svg id="c2" viewBox="0 0 340 200" width="100%" role="img" aria-label="Wykres zużycia"></svg>
+<div class="tip" id="c2t" role="status"></div>
+<div class="leg"><span><i style="background:var(--g)"></i>Z paneli</span><span><i style="background:var(--b)"></i>Pobrane z sieci</span></div></div>
+<div class="card scroll"><p class="lb"><i style="background:var(--b)"></i>Zestawienie roczne</p><table id="tb"></table></div>
+<div id="yx"></div>
+</section>
+
+<section id="s2" hidden>
+<div class="card">
+<p class="lb"><i style="background:var(--b)"></i>Domyślna cena energii</p>
+<div class="fld"><input id="tp" inputmode="decimal"><span>zł/kWh</span></div>
+<p class="lb"><i style="background:var(--y)"></i>Współczynnik bilansowania</p>
+<div class="fld"><input id="tk" inputmode="decimal"><span>(0,8 lub 0,7)</span></div>
+<p class="lb"><i style="background:var(--g)"></i>Moc instalacji</p>
+<div class="fld"><input id="tw" inputmode="decimal"><span>kWp</span></div>
+<p class="lb"><i style="background:var(--y)"></i>Oczekiwany uzysk roczny</p>
+<div class="fld"><input id="tu" inputmode="decimal"><span>kWh/kWp</span></div>
+<button class="btn" id="ts">Zapisz taryfę</button>
+<div class="msg" id="tm" role="alert"></div>
+<p class="hint">Cena podstawiana jest do nowych odczytów. Bilans = współczynnik × oddanie − pobór. Ujemny bilans to energia do zapłaty.</p>
+</div>
+<div class="card" id="mpr"></div>
+<div class="card"><p class="lb"><i style="background:var(--g)"></i>Dane i pliki</p>
+<button class="btn" id="xd">Pobierz raport xlsx</button>
+<button class="btn alt" id="xu">Wgraj plik xlsx</button>
+<button class="btn alt" id="xb">Pobierz kopię zapasową (.json)</button>
+<button class="btn alt" id="xr">Przywróć z kopii (.json)</button>
+<input type="file" id="xrf" accept=".json" hidden>
+<input type="file" id="xf" accept=".xlsx,.xls" hidden>
+<div class="msg" id="fm" style="color:var(--g)" role="status"></div>
+<p class="hint">Plik ma układ raportu z Monitor PV (arkusz „Zestawienie ROK”). Wgranie uzupełnia lub nadpisuje odczyty z miesięcy zawartych w pliku.</p></div>
+</section>
+
+<section id="s3" hidden><div class="card" id="fc2"></div>
+<div class="card" id="bat"></div></section>
+</main>
+
+<nav role="tablist">
+<button role="tab" aria-selected="true" data-t="0"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span>Miesiąc</button>
+<button role="tab" aria-selected="false" data-t="1"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 20V10M11 20V4M17 20v-7M3 20h18"/></svg></span>Rok</button>
+<button role="tab" aria-selected="false" data-t="2"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/></svg></span>Taryfy</button>
+<button role="tab" aria-selected="false" data-t="3"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg></span>Prognoza</button>
+</nav>
+
+<script>
+var KEY="pv3",S={price:1.4,k:0.8,name:"Instalacja PV Dom",kwp:3.8},R={},now=new Date(),Y=now.getFullYear(),M=now.getMonth(),raw=null;
+var SEED=[["2025-12",0,10815,9079],["2026-01",86,11207,9128],["2026-02",167,11495,9233],["2026-03",452,11712,9584],["2026-04",495,11914,9951],["2026-05",554,12110,10363],["2026-06",539,12377,10699],["2026-07",502,12684,11017],["2026-08",497.7,12920,11370],["2026-09",324,13250,11572],["2026-10",176,13583,11676]];
+try{raw=localStorage.getItem(KEY)}catch(e){}
+if(raw){try{var j=JSON.parse(raw);if(j.S)S=j.S;if(j.R)R=j.R}catch(e){}}
+else{SEED.forEach(function(x){R[x[0]]={p:x[1],i:x[2],e:x[3],c:1.4}});save()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,R:R}))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function num(s){var n=parseFloat(String(s).replace(/\s/g,"").replace(",","."));return isNaN(n)?null:n}
+function f(n,d){return n.toLocaleString("pl-PL",{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false})}
+function fm(n){return String(n).replace(".",",")}
+function zl(n){return (n>0?"+":"")+f(n,2)+" zł"}
+var MN=["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+function ky(y,m){return y+"-"+(m<9?"0":"")+(m+1)}
+function keys(){return Object.keys(R).sort()}
+function prevKey(k){return keys().filter(function(x){return x<k}).pop()}
+function nextKey(k){return keys().filter(function(x){return x>k})[0]}
+
+function calc(){
+ var ks=keys(),P={};
+ for(var n=1;n<ks.length;n++){
+  var a=R[ks[n-1]],b=R[ks[n]],imp=b.i-a.i,exp=b.e-a.e,prod=b.p,self=Math.max(0,prod-exp),bil=S.k*exp-imp;
+  P[ks[n]]={prod:prod,imp:imp,exp:exp,self:self,cons:imp+self,bil:bil,wart:self*b.c,bz:bil*b.c,cost:(imp+self)*b.c,pv:prod*b.c};
+ }
+ return P;
+}
+function totals(P,y){
+ var T={prod:0,imp:0,exp:0,self:0,cons:0,bil:0,wart:0,bz:0,cost:0,pv:0,n:0,m:[]};
+ for(var m=0;m<12;m++){var p=P[ky(y,m)];if(!p)continue;T.n++;T.m.push(m);for(var q in p)T[q]+=p[q]}
+ return T;
+}
+
+function card(l,col,v,u,pc,pt,pl){
+ return '<p class="lb"><i style="background:'+col+'"></i>'+l+'</p><p class="big" style="color:'+col+'">'+v+(u?'<small>'+u+'</small>':'')+'</p>'+
+ (pt?'<span class="pill" style="color:'+pc+';border-color:color-mix(in srgb,'+pc+' 35%,transparent);background:color-mix(in srgb,'+pc+' 10%,transparent)">'+pt+' <small>'+pl+'</small></span>':'');
+}
+function renderRes(P){
+ var T=totals(P,Y),sal=T.wart+T.bz,pay=T.bz<0,ac=T.prod>0?T.self/T.prod*100:0;
+ $("res").innerHTML=
+  card("Produkcja PV","var(--g)",f(T.prod,1),"kWh","var(--g)",f(T.pv,2)+" zł","wartość")+'<div class="sep"></div>'+
+  card("Całkowite zużycie","var(--y)",f(T.cons,1),"kWh","var(--y)",f(T.cost,2)+" zł","koszt")+'<div class="sep"></div>'+
+  card("Wartość energii","var(--b)",f(T.wart,2)+" zł","","var(--b)","","")+
+  '<span class="pill" style="color:var(--b);border-color:color-mix(in srgb,var(--b) 35%,transparent);background:color-mix(in srgb,var(--b) 10%,transparent)"><small>Oszczędność PV · autokonsumpcja '+f(ac,1)+'%</small></span><div class="sep"></div>'+
+  card("Bilans ("+fm(S.k)+")",T.bil<0?"var(--r)":"var(--g)",f(T.bil,1),"kWh",T.bil<0?"var(--r)":"var(--g)",f(T.bz,2)+" zł",pay?"do zapłaty":"nadwyżka")+'<div class="sep"></div>'+
+  card("Saldo finansowe",sal<0?"var(--r)":"var(--g)",zl(sal),"",sal<0?"var(--r)":"var(--g)",sal<0?"Strata":"Zysk netto","");
+}
+
+function renderChips(){
+ var h="";
+ for(var m=0;m<12;m++)h+='<button data-m="'+m+'" class="'+(m===M?"on ":"")+(R[ky(Y,m)]?"has":"")+'">'+MN[m]+'</button>';
+ $("chips").innerHTML=h;
+ [].forEach.call($("chips").children,function(b){b.onclick=function(){M=+b.dataset.m;renderChips();loadForm()}});
+}
+function loadForm(){
+ var k=ky(Y,M),r=R[k],p=R[prevKey(k)]||{};
+ $("fp").value=r?fm(r.p):"";$("fi").value=r?fm(r.i):"";$("fe").value=r?fm(r.e):"";$("fc").value=fm(r?r.c:S.price);
+ $("fp").placeholder=p.p!=null?"ostatnio "+fm(p.p):"0";$("fi").placeholder=p.i!=null?"ostatnio "+fm(p.i):"0";$("fe").placeholder=p.e!=null?"ostatnio "+fm(p.e):"0";
+ $("dl").hidden=!r;$("msg").textContent="";$("yb").textContent=Y;
+}
+$("sv").onclick=function(){
+ var p=num($("fp").value),i=num($("fi").value),e=num($("fe").value),c=num($("fc").value),k=ky(Y,M),m=$("msg");
+ if(p===null||i===null||e===null||c===null){m.textContent="Uzupełnij produkcję, oba liczniki i cenę.";return}
+ if(p<0||i<0||e<0||c<0){m.textContent="Wartości nie mogą być ujemne.";return}
+ var a=R[prevKey(k)],z=R[nextKey(k)];
+ if(a&&(i<a.i||e<a.e)){m.textContent="Któryś stan jest niższy niż w poprzednim odczycie.";return}
+ if(z&&(i>z.i||e>z.e)){m.textContent="Któryś stan jest wyższy niż w kolejnym odczycie.";return}
+ R[k]={p:p,i:i,e:e,c:c};save();all();
+};
+$("dl").onclick=function(){delete R[ky(Y,M)];save();all()};
+
+var SEL={};
+function bars(id,rows,A,B){
+ var W=340,H=200,L=34,base=H-22,top=14,max=1,st=(W-L)/12,w=Math.min(18,st*.7),s="";
+ rows.forEach(function(r){max=Math.max(max,r[A]+r[B])});
+ [0,.5,1].forEach(function(t){var y=base-t*(base-top);s+='<line x1="'+L+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--ln)"/><text x="'+(L-4)+'" y="'+(y+3)+'" text-anchor="end">'+f(max*t,0)+'</text>'});
+ rows.forEach(function(r,i){
+  var x=L+i*st+(st-w)/2,ha=r[A]/max*(base-top),hb=r[B]/max*(base-top);
+  s+='<rect x="'+x+'" y="'+(base-ha)+'" width="'+w+'" height="'+ha+'" rx="3" fill="var(--g)"/><rect x="'+x+'" y="'+(base-ha-hb)+'" width="'+w+'" height="'+hb+'" rx="3" fill="'+(B==="exp"?"var(--y)":"var(--b)")+'"/>';
+  s+='<text x="'+(x+w/2)+'" y="'+(H-8)+'" text-anchor="middle">'+MN[i]+'</text>';
+ });
+ rows.forEach(function(r,i){s+='<rect data-i="'+i+'" x="'+(L+i*st)+'" y="'+top+'" width="'+st+'" height="'+(base-top+22)+'" fill="'+(SEL[id]===i?'var(--g)':'transparent')+'" fill-opacity=".14" rx="4"/>'});
+ $(id).innerHTML=s;
+ var c1=id==="c1",N=c1?{self:"Zużyte na miejscu",exp:"Oddane do sieci"}:{self:"Z paneli",imp:"Pobrane z sieci"},C={self:"var(--g)",exp:"var(--y)",imp:"var(--b)"},j=SEL[id],t=$(id+"t");
+ if(j===undefined)t.textContent="Dotknij słupka, aby zobaczyć wartości.";
+ else{var r=rows[j];t.innerHTML=r[A]+r[B]>0?'<b>'+MP[j]+' '+Y+'</b><br>'+[A,B].map(function(k){return '<span style="color:'+C[k]+'">●</span> '+N[k]+': '+f(r[k],1)+' kWh'}).join('<br>')+'<br>'+(c1?'Produkcja':'Zużycie')+': <b>'+f(r[A]+r[B],1)+' kWh</b>':'<b>'+MP[j]+' '+Y+'</b><br>brak danych'}
+ $(id).onclick=function(ev){var el=ev.target.closest("[data-i]");if(!el)return;var i=+el.getAttribute("data-i");SEL[id]=SEL[id]===i?undefined:i;bars(id,rows,A,B)};
+}
+function renderYear(P){
+ var rows=[],z={prod:0,imp:0,exp:0,self:0,cons:0,bil:0,wart:0,bz:0};
+ for(var m=0;m<12;m++)rows.push(P[ky(Y,m)]||z);
+ bars("c1",rows,"self","exp");bars("c2",rows,"self","imp");
+ var T=totals(P,Y),h='<thead><tr><th>Mies.</th><th>Prod.</th><th>Zużycie</th><th>Autokons.</th><th>Bilans</th><th>Saldo zł</th></tr></thead><tbody>';
+ rows.forEach(function(r,i){if(r===z)return;h+='<tr><td>'+MN[i]+'</td><td>'+f(r.prod,0)+'</td><td>'+f(r.cons,0)+'</td><td>'+f(r.self,0)+'</td><td>'+f(r.bil,0)+'</td><td>'+f(r.wart+r.bz,2)+'</td></tr>'});
+ h+='</tbody><tfoot><tr><td>Razem</td><td>'+f(T.prod,0)+'</td><td>'+f(T.cons,0)+'</td><td>'+f(T.self,0)+'</td><td>'+f(T.bil,0)+'</td><td>'+f(T.wart+T.bz,2)+'</td></tr></tfoot>';
+ $("tb").innerHTML=h;
+}
+var CM,CY,SB;
+function renderStruct(P){
+ var last=-1,m,h="";
+ for(m=0;m<12;m++)if(P[ky(Y,m)])last=m;
+ if(CY!==Y){CY=Y;CM=undefined;SB=undefined}
+ if(CM===undefined)CM=last>=0?last:0;
+ for(m=0;m<12;m++)h+='<button data-m="'+m+'" class="'+(m===CM?"on ":"")+(P[ky(Y,m)]?"has":"")+'">'+MN[m]+'</button>';
+ $("schips").innerHTML=h;
+ [].forEach.call($("schips").children,function(b){b.onclick=function(){CM=+b.dataset.m;SB=undefined;renderStruct(P)}});
+ var p=P[ky(Y,CM)],t=$("c3t"),c=$("c3");
+ if(!p){c.innerHTML='<text x="170" y="120" text-anchor="middle">Brak danych: '+MP[CM]+' '+Y+'</text>';t.textContent="";c.onclick=null;return}
+ var D=[["Zużycie","Zużycie domu",p.cons,"kWh","var(--tx)"],["Pobór","Pobranie z sieci",p.imp,"kWh","var(--r)"],["Autokons.","Autokonsumpcja",p.self,"kWh","var(--g)"],["Oddanie","Oddanie do sieci",p.exp,"kWh","#fb923c"],["Magazyn","Energia z magazynu sieci ("+S.k+")",S.k*p.exp,"kWh","var(--b)"],["Wart. zł","Wartość autokonsumpcji",p.wart,"zł","var(--y)"],["Saldo zł","Realne saldo finansowe",p.wart+p.bz,"zł","#8b5cf6"]];
+ var vs=D.map(function(d){return d[2]}),mx=Math.max(1,Math.max.apply(null,vs)),mn=Math.min(0,Math.min.apply(null,vs)),top=26,bot=205,sc=(bot-top)/(mx-mn),y0=top+mx*sc,st=324/7,w=30,s='<line x1="8" x2="332" y1="'+y0+'" y2="'+y0+'" stroke="var(--ln)" stroke-dasharray="4 4"/>';
+ D.forEach(function(d,i){
+  var v=d[2],hh=Math.abs(v)*sc,x=8+i*st+(st-w)/2,y=v>=0?y0-hh:y0;
+  s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+Math.max(hh,1)+'" rx="6" fill="'+d[4]+'"'+(SB===i?' stroke="var(--tx)" stroke-width="2"':'')+'/>';
+  s+='<text class="vl" x="'+(x+w/2)+'" y="'+(v>=0?y-5:y+hh+11)+'" text-anchor="middle">'+fm(Math.round(v*10)/10)+'</text>';
+  s+='<text x="'+(x+w/2)+'" y="'+(bot+24)+'" text-anchor="middle" style="font-size:8px">'+d[0]+'</text>';
+ });
+ D.forEach(function(d,i){s+='<rect data-i="'+i+'" x="'+(8+i*st)+'" y="0" width="'+st+'" height="245" fill="transparent"/>'});
+ c.innerHTML=s;
+ t.innerHTML=SB===undefined?'<b>'+MP[CM]+' '+Y+'</b><br>Dotknij słupka, aby zobaczyć wartość.':'<b>'+D[SB][1]+'</b><br>'+MP[CM]+' '+Y+': <b>'+f(D[SB][2],2)+' '+D[SB][3]+'</b>';
+ c.onclick=function(ev){var el=ev.target.closest("[data-i]");if(!el)return;var i=+el.getAttribute("data-i");SB=SB===i?undefined:i;renderStruct(P)};
+}
+function n1(x){return fm(Math.round(x*10)/10)}
+function kv(lab,bd,col,val,unit,sub,desc){
+ return '<div class="kv"><div class="kr"><span class="kl">'+lab+'</span><span class="bd" style="color:'+col+';border-color:color-mix(in srgb,'+col+' 40%,transparent);background:color-mix(in srgb,'+col+' 12%,transparent)">'+bd+'</span><span class="kvv" style="color:'+col+'">'+val+(unit?' <small>'+unit+'</small>':'')+(sub?'<em>'+sub+'</em>':'')+'</span></div><p class="kd">'+desc+'</p></div>';
+}
+function renderYSum(P){
+ var T=totals(P,Y),ac=T.prod>0?T.self/T.prod*100:0,pk=T.cons>0?T.self/T.cons*100:0,neg=T.bil<0,cb=neg?"var(--r)":"var(--g)",pk1=Math.round(pk*10)/10,ac1=Math.round(ac*10)/10;
+ $("ysum").innerHTML=
+ '<div class="card"><p class="lb"><i style="background:var(--g)"></i>Suma oszczędności roku</p><p class="bigw">'+f(T.wart,2)+' zł</p><p class="lb" style="margin:0"><i style="background:var(--g)"></i>Zysk generowany w roku '+Y+'</p></div>'+
+ '<div class="card"><p class="lb"><i style="background:var(--y)"></i>Roczne zużycie energii</p>'+
+ kv("Pobór całkowity (zużycie)","PC","var(--y)",n1(T.cons),"kWh","","Całkowity prąd zużyty w gospodarstwie domowym (produkcja własna + pobranie z sieci).")+
+ kv("Pobranie z sieci","PS","var(--r)",n1(T.imp),"kWh","","Energia pobrana z sieci energetycznej (licznik 1.8.0).")+
+ kv("Produkcja po opuście ("+S.k+")","PO","var(--g)",n1(T.prod-T.exp*(1-S.k)),"kWh","","Produkcja z falownika pomniejszona o "+n1((1-S.k)*100)+"% energii oddanej do sieci (autokonsumpcja + "+S.k+" × oddanie).")+
+ kv("Roczny bilans ("+S.k+")",neg?"B-":"B+",cb,n1(T.bil),"kWh",f(T.bz,2)+" zł ("+(neg?"do zapłaty":"nadwyżka")+")","Narastający roczny bilans ilościowy ("+S.k+" × oddanie do sieci minus pobranie) wyliczony od stycznia do grudnia. Masz bilans "+(neg?"ujemny":"dodatni")+" w rozliczeniu rocznym.")+'</div>'+
+ '<div class="card"><p class="lb"><i style="background:var(--g)"></i>Produkcja i bilans roku</p>'+
+ kv("Produkcja z falownika","PF","var(--g)",n1(T.prod),"kWh","","Całkowita roczna ilość energii wygenerowanej przez panele fotowoltaiczne.")+
+ kv("Autokonsumpcja","AK","var(--g)",n1(T.self),"kWh","("+n1(ac)+"%)","Suma wyprodukowanej energii zużytej bezpośrednio na potrzeby bieżące. Stanowi <b>"+n1(ac)+"%</b> całkowitej rocznej produkcji PV.")+
+ kv("Pokrycie potrzeb (niezależność)","PP","var(--b)",n1(pk)+"%","","","Wskaźnik autarkii: część całego domowego poboru prądu, która została pokryta bezpośrednio przez słońce. Reszta ("+fm(Math.round((100-pk1)*10)/10)+"%) pochodzi z sieci.")+
+ ''+'</div>';
+}
+var SL={},PDFJS=["pdfmake.min.js","vfs_fonts.js"];
+function def(){S.yield=S.yield||1000;S.bcap=S.bcap==null?10:S.bcap;S.beta=S.beta||0.9;S.kwp=S.kwp||3.8;S.name=S.name||"Instalacja PV Dom"}
+async function saveFile(fn,data){
+ var dl=window.claude?await claude.use("downloads"):null;
+ if(dl){await dl.save({filename:fn,data:data});return}
+ var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=fn;document.body.appendChild(a);a.click();a.remove();
+}
+function gb(id,A,B,nA,nB,u){
+ var W=340,H=200,L=34,base=H-22,top=14,max=1,st=(W-L)/12,w=st*.36,s="";
+ A.concat(B).forEach(function(v){if(v>max)max=v});
+ [0,.5,1].forEach(function(t){var y=base-t*(base-top);s+='<line x1="'+L+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--ln)"/><text x="'+(L-4)+'" y="'+(y+3)+'" text-anchor="end">'+f(max*t,0)+'</text>'});
+ for(var i=0;i<12;i++){
+  var x=L+i*st+st*.12,ha=A[i]/max*(base-top),hb=B[i]/max*(base-top);
+  s+='<rect x="'+x+'" y="'+(base-ha)+'" width="'+w+'" height="'+ha+'" rx="2" fill="var(--g)"/><rect x="'+(x+w+1)+'" y="'+(base-hb)+'" width="'+w+'" height="'+hb+'" rx="2" fill="var(--b)"/>';
+  s+='<text x="'+(L+i*st+st/2)+'" y="'+(H-8)+'" text-anchor="middle">'+MN[i]+'</text>';
+  s+='<rect data-i="'+i+'" x="'+(L+i*st)+'" y="'+top+'" width="'+st+'" height="'+(base-top+22)+'" fill="'+(SL[id]===i?'var(--g)':'transparent')+'" fill-opacity=".14" rx="4"/>';
+ }
+ $(id).innerHTML=s;
+ var t=$(id+"t"),j=SL[id];
+ t.innerHTML=j===undefined?'Dotknij miesiąca, aby zobaczyć wartości.':'<b>'+MP[j]+'</b><br><span style="color:var(--g)">●</span> '+nA+': '+f(A[j],1)+' '+u+'<br><span style="color:var(--b)">●</span> '+nB+': '+f(B[j],1)+' '+u+(A[j]>0&&B[j]>0?'<br>Różnica: <b>'+(A[j]>=B[j]?'+':'')+f((A[j]/B[j]-1)*100,1)+'%</b>':'');
+ $(id).onclick=function(ev){var el=ev.target.closest("[data-i]");if(!el)return;var i=+el.getAttribute("data-i");SL[id]=SL[id]===i?undefined:i;gb(id,A,B,nA,nB,u)};
+}
+function renderYX(P){
+ var T=totals(P,Y),Tp=totals(P,Y-1),A=[],B=[],E=[],al="",best=-1,worst=-1,m;
+ for(m=0;m<12;m++){
+  var p=P[ky(Y,m)],q=P[ky(Y-1,m)],ex=S.kwp*S.yield*SH[m]/100;
+  A.push(p?p.prod:0);B.push(q?q.prod:0);E.push(ex);
+  if(p){
+   if(best<0||p.prod>A[best])best=m;
+   if(worst<0||p.prod<A[worst])worst=m;
+   if(ex>20&&p.prod<.7*ex)al+='<p class="hint" style="color:var(--r)">⚠ '+MP[m]+': '+n1(p.prod/ex*100)+'% oczekiwanej produkcji ('+n1(p.prod)+' z '+n1(ex)+' kWh). Sprawdź zacienienie, zabrudzenie paneli lub pracę falownika.</p>';
+  }
+ }
+ var cmp=Tp.n?'Produkcja '+Y+': <b>'+n1(T.prod)+' kWh</b>, '+(Y-1)+': <b>'+n1(Tp.prod)+' kWh</b><br>Saldo '+Y+': <b>'+f(T.wart+T.bz,2)+' zł</b>, '+(Y-1)+': <b>'+f(Tp.wart+Tp.bz,2)+' zł</b>':'Brak danych z roku '+(Y-1)+'. Porównanie pojawi się po dodaniu odczytów z dwóch lat.';
+ var ext=best>=0?'Najlepszy miesiąc: <b>'+MP[best]+' ('+n1(A[best])+' kWh)</b>, najsłabszy: <b>'+MP[worst]+' ('+n1(A[worst])+' kWh)</b>.':'';
+ var sv='width="100%" role="img" viewBox="0 0 340 200"';
+ $("yx").innerHTML=
+ '<div class="card"><p class="lb"><i style="background:var(--b)"></i>Porównanie lat</p><svg id="c4" '+sv+' aria-label="Porównanie lat"></svg><div class="leg"><span><i style="background:var(--g)"></i>'+Y+'</span><span><i style="background:var(--b)"></i>'+(Y-1)+'</span></div><div class="tip" id="c4t" role="status"></div><p class="hint">'+cmp+'<br>'+ext+'</p></div>'+
+ '<div class="card"><p class="lb"><i style="background:var(--y)"></i>Produkcja a oczekiwana</p><svg id="c5" '+sv+' aria-label="Produkcja rzeczywista i oczekiwana"></svg><div class="leg"><span><i style="background:var(--g)"></i>Rzeczywista</span><span><i style="background:var(--b)"></i>Oczekiwana ('+fm(S.kwp)+' kWp × '+fm(S.yield)+' kWh/kWp)</span></div><div class="tip" id="c5t" role="status"></div>'+(al||'<p class="hint">Brak alertów: produkcja mieści się w typowych granicach.</p>')+'</div>'+
+ '<div class="card"><button class="btn" id="pdf">Pobierz raport PDF</button><div class="msg" id="pm" style="color:var(--g)" role="status"></div></div>';
+ gb("c4",A,B,String(Y),String(Y-1),"kWh");gb("c5",A,E,"Rzeczywista","Oczekiwana","kWh");
+ $("pdf").onclick=pdfReport;
+}
+function renderBat(P){
+ var T=totals(P,Y),st=0,gz=0;
+ T.m.forEach(function(m){var p=P[ky(Y,m)],d=new Date(Y,m+1,0).getDate(),s=Math.min(p.exp,p.imp,S.bcap*d*S.beta);st+=s;gz+=(S.beta-S.k)*s*R[ky(Y,m)].c});
+ var pk0=T.cons>0?T.self/T.cons*100:0,pk1=T.cons>0?(T.self+S.beta*st)/T.cons*100:0;
+ $("bat").innerHTML='<p class="lb"><i style="background:var(--b)"></i>Symulacja magazynu energii</p>'+
+ '<div class="fld"><input id="bc" inputmode="decimal" value="'+fm(S.bcap)+'"><span>kWh pojemność</span></div>'+
+ '<div class="fld"><input id="be" inputmode="decimal" value="'+fm(Math.round(S.beta*100))+'"><span>% sprawność</span></div>'+
+ kv("Zmagazynowana energia rocznie","MG","var(--b)",n1(st),"kWh","","Nadwyżka oddana do sieci, którą magazyn mógłby wykorzystać wieczorem zamiast pobierania z sieci.")+
+ kv("Zysk względem opustu","zł",gz>=0?"var(--g)":"var(--r)",(gz>0?"+":"")+f(gz,2),"zł","","Różnica: (sprawność − opust "+S.k+") × zmagazynowana energia × cena.")+
+ kv("Pokrycie potrzeb z magazynem","PP","var(--y)",n1(pk1)+"%","","teraz "+n1(pk0)+"%","Udział zużycia pokrytego energią z paneli po dodaniu magazynu.")+
+ '<p class="hint">Szacunek miesięczny, bez danych dobowych. Przy opuście 0,8 zysk jest zwykle niewielki, bo część energii i tak wraca z sieci.</p>';
+ $("bc").onchange=function(){var v=num(this.value);if(v!==null&&v>=0){S.bcap=v;save();all()}};
+ $("be").onchange=function(){var v=num(this.value);if(v!==null&&v>0&&v<=100){S.beta=v/100;save();all()}};
+}
+function renderPrices(){
+ var h='<p class="lb"><i style="background:var(--b)"></i>Ceny energii w miesiącach '+Y+'</p>',n=0;
+ for(var m=0;m<12;m++){var k=ky(Y,m),r=R[k];if(!r)continue;n++;
+  h+='<div class="fld" style="margin-bottom:10px"><span style="min-width:2.6em">'+MN[m]+'</span><input data-k="'+k+'" value="'+fm(r.c)+'" inputmode="decimal" style="font-size:1.2rem;text-align:right"><span>zł/kWh</span></div>'}
+ if(n)h+='<button class="btn alt" id="pa">Ustaw cenę domyślną dla całego roku</button><p class="hint">Zmiana ceny przelicza wartości w zł dla danego miesiąca.</p>';
+ else h+='<p class="empty">Brak odczytów w tym roku.</p>';
+ $("mpr").innerHTML=h;
+ [].forEach.call($("mpr").querySelectorAll("input"),function(i){i.onchange=function(){var c=num(i.value);if(c===null||c<0)return;R[i.dataset.k].c=c;save();all()}});
+ if($("pa"))$("pa").onclick=function(){for(var m=0;m<12;m++){var r=R[ky(Y,m)];if(r)r.c=S.price}save();all()};
+}
+function renderBnr(){
+ var h="",ks=keys(),d=new Date(),A={};
+ if(ks.length){
+  var e=d.getDate()>=28?new Date(d.getFullYear(),d.getMonth(),1):new Date(d.getFullYear(),d.getMonth()-1,1),k=ky(e.getFullYear(),e.getMonth());
+  if(k>ks[ks.length-1]){h+='<div class="bn"><span>Czas na odczyt: wpisz stany liczników za '+MP[e.getMonth()].toLowerCase()+' '+e.getFullYear()+'.</span><button id="b1">Wpisz</button></div>';A.b1=function(){Y=e.getFullYear();M=e.getMonth();all();$("fp").scrollIntoView({block:"center"});$("fp").focus()}}
+  if(!S.backup||Date.now()-S.backup>2592e6){h+='<div class="bn"><span>Zrób kopię zapasową danych (plik .json).</span><button id="b2">Pobierz kopię</button></div>';A.b2=function(){$("xb").onclick()}}
+ }
+ $("bnr").innerHTML=h;
+ for(var i in A)$(i).onclick=A[i];
+}
+function loadJS(u){return new Promise(function(ok,no){var s=document.createElement("script");s.src=u;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+async function pdfReport(){
+ var m=$("pm");m.textContent="Przygotowuję PDF…";
+ try{
+  if(typeof pdfMake==="undefined"){await loadJS(PDFJS[0]);await loadJS(PDFJS[1])}
+  var P=calc(),T=totals(P,Y),ac=T.prod>0?T.self/T.prod*100:0,pk=T.cons>0?T.self/T.cons*100:0;
+  function c(t,b){return {text:t,alignment:"right",bold:!!b}}
+  var kp=[["Produkcja z falownika",n1(T.prod)+" kWh"],["Całkowite zużycie",n1(T.cons)+" kWh"],["Autokonsumpcja",n1(T.self)+" kWh ("+n1(ac)+"%)"],["Pokrycie potrzeb",n1(pk)+"%"],["Pobranie z sieci",n1(T.imp)+" kWh"],["Oddanie do sieci",n1(T.exp)+" kWh"],["Bilans ("+S.k+")",n1(T.bil)+" kWh ("+f(T.bz,2)+" zł)"],["Suma oszczędności",f(T.wart,2)+" zł"],["Saldo finansowe",f(T.wart+T.bz,2)+" zł"]];
+  var rows=[[{text:"Miesiąc",bold:true},c("Produkcja",1),c("Zużycie",1),c("Autokons.",1),c("Bilans",1),c("Saldo zł",1)]];
+  T.m.forEach(function(i){var p=P[ky(Y,i)];rows.push([MP[i],c(n1(p.prod)),c(n1(p.cons)),c(n1(p.self)),c(n1(p.bil)),c(f(p.wart+p.bz,2))])});
+  rows.push([{text:"Razem",bold:true},c(n1(T.prod),1),c(n1(T.cons),1),c(n1(T.self),1),c(n1(T.bil),1),c(f(T.wart+T.bz,2),1)]);
+  var def2={pageMargins:[40,40,40,40],defaultStyle:{fontSize:10},content:[
+   {text:"Raport roczny PV "+Y,fontSize:20,bold:true,margin:[0,0,0,4]},
+   {text:S.name+" · "+fm(S.kwp)+" kWp · opust "+S.k,color:"#555",margin:[0,0,0,14]},
+   {table:{widths:["*","auto"],body:kp},layout:"lightHorizontalLines",margin:[0,0,0,16]},
+   {text:"Zestawienie miesięczne",fontSize:13,bold:true,margin:[0,0,0,6]},
+   {table:{headerRows:1,widths:["*","auto","auto","auto","auto","auto"],body:rows},layout:"lightHorizontalLines"},
+   {text:"Wygenerowano: "+new Date().toLocaleDateString("pl-PL")+" · Kalkulator fotowoltaiczny",color:"#777",fontSize:8,margin:[0,16,0,0]}]};
+  var buf=await new Promise(function(ok){pdfMake.createPdf(def2).getBuffer(ok)});
+  await saveFile("Raport_PV_"+Y+".pdf",buf);m.textContent="Raport PDF zapisany.";
+ }catch(e){m.textContent=e&&e.code==="declined"?"Anulowano zapis.":"Nie udało się utworzyć PDF."}
+}
+$("xb").onclick=async function(){
+ try{await saveFile("Kopia_PV_"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({S:S,R:R}));S.backup=Date.now();save();all();fmsg("Kopia zapisana.")}
+ catch(e){fmsg(e&&e.code==="declined"?"Anulowano zapis.":"Nie udało się zapisać kopii.")}
+};
+$("xr").onclick=function(){$("xrf").click()};
+$("xrf").onchange=function(){
+ var fl=this.files[0],inp=this;if(!fl)return;
+ var rd=new FileReader();
+ rd.onload=function(){try{var j=JSON.parse(rd.result);if(!j.R)throw 0;R=j.R;if(j.S)S=j.S;save();all();fmsg("Przywrócono kopię: odczytów "+Object.keys(R).length+".")}catch(e){fmsg("To nie jest poprawny plik kopii (.json).")}};
+ rd.readAsText(fl);inp.value="";
+};
+var SH=[3,5,9,12,14,14,14,12,8,5,2,2];
+function renderFc(P){
+ var T=totals(P,Y);
+ if(!T.n){$("fc2").innerHTML='<p class="empty">Dodaj co najmniej dwa odczyty w roku '+Y+', aby zobaczyć prognozę.</p>';return}
+ var sh=0;T.m.forEach(function(m){sh+=SH[m]});
+ var pp=T.prod/sh*100,pc=T.cons/T.n*12,ac=T.prod>0?T.self/T.prod:0;
+ $("fc2").innerHTML=card("Prognoza produkcji "+Y,"var(--g)",f(pp,0),"kWh","var(--g)",f(pp*ac,0)+" kWh","autokonsumpcja")+'<div class="sep"></div>'+
+ card("Prognoza zużycia","var(--y)",f(pc,0),"kWh","var(--y)",f(pc*(S.price),0)+" zł","koszt")+
+ '<p class="hint">Szacunek na podstawie '+T.n+' mies. z danymi: produkcja wg typowego rozkładu sezonowego w Polsce, zużycie jako średnia miesięczna × 12. To wartości orientacyjne.</p>';
+}
+
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){
+ document.querySelectorAll("nav button").forEach(function(x){x.setAttribute("aria-selected",x===b)});
+ for(var n=0;n<4;n++)$("s"+n).hidden=n!==+b.dataset.t;
+}});
+$("yp").onclick=function(){Y--;all()};$("yn").onclick=function(){Y++;all()};
+$("ts").onclick=function(){
+ var p=num($("tp").value),k=num($("tk").value);
+ if(p===null||k===null||p<0||k<0||k>1.5){$("tm").textContent="Podaj poprawną cenę i współczynnik (np. 0,8).";return}
+ S.price=p;S.k=k;var w=num($("tw").value),u=num($("tu").value);if(w!==null&&w>0)S.kwp=w;if(u!==null&&u>0)S.yield=u;save();$("tm").textContent="";all();
+};
+function all(){
+ def();var P=calc();$("yl").textContent=Y;
+ renderRes(P);renderChips();loadForm();renderYear(P);renderFc(P);renderStruct(P);renderYSum(P);renderYX(P);renderBat(P);renderPrices();renderBnr();
+ $("tp").value=fm(S.price);$("tk").value=fm(S.k);$("tw").value=fm(S.kwp);$("tu").value=fm(S.yield);
+}
+var MP=["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+function r2(n){return Math.round(n*100)/100}
+function pc(a,b){return b>0?parseFloat((a/b*100).toFixed(1))+"%":"-"}
+function fmsg(t){$("fm").textContent=t}
+function buildWB(){
+ var P=calc(),wb=XLSX.utils.book_new(),ys={},sum=[["Rok","Liczba miesięcy","Produkcja Roczna (kWh)","Pobranie z Sieci (kWh)","Oddanie do Sieci (kWh)","Autokonsumpcja (kWh)","Średnia Autokonsumpcja (%)","Bilans Roczny ("+S.k+") (kWh)","Realne Saldo Roczne (PLN)"]];
+ var H=["Miesiąc","Rok","Produkcja Falownika (kWh)","Stan Licznika 1.8.0","Stan Licznika 2.8.0","Pobranie z Sieci (kWh)","Oddanie do Sieci (kWh)","Autokonsumpcja (kWh)","Autokonsumpcja (%)","Całkowite Zużycie Domu (kWh)","Pokrycie Potrzeb (%)","Energia z Magazynu Sieci ("+S.k+")","Bilans Ilościowy Sieci (kWh)","Cena Energii (PLN/kWh)","Wartość Autokonsumpcji (PLN)","Realne Saldo Finansowe (PLN)"];
+ keys().forEach(function(k){ys[k.slice(0,4)]=1});
+ Object.keys(ys).sort().forEach(function(y){
+  y=+y;var rows=[H],T=totals(P,y);
+  for(var m=0;m<12;m++){
+   var k=ky(y,m),r=R[k],p=P[k];
+   if(!r)rows.push([MP[m],y].concat(Array(14).fill("-")));
+   else if(!p)rows.push([MP[m],y,r2(r.p),r.i,r.e].concat(Array(11).fill("-")));
+   else rows.push([MP[m],y,r2(p.prod),r.i,r.e,r2(p.imp),r2(p.exp),r2(p.self),pc(p.self,p.prod),r2(p.cons),pc(p.self,p.cons),r2(S.k*p.exp),r2(p.bil),r.c,r2(p.wart),r2(p.wart+p.bz)]);
+  }
+  rows.push(["PODSUMOWANIE ROKU",y,r2(T.prod),"","",r2(T.imp),r2(T.exp),r2(T.self),pc(T.self,T.prod),r2(T.cons),pc(T.self,T.cons),r2(S.k*T.exp),r2(T.bil),"-",r2(T.wart),r2(T.wart+T.bz)]);
+  var ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=H.map(function(h,i){return {wch:i?Math.max(12,h.length*.8):18}});
+  XLSX.utils.book_append_sheet(wb,ws,"Zestawienie "+y);
+  sum.push([y,T.n,r2(T.prod),r2(T.imp),r2(T.exp),r2(T.self),pc(T.self,T.prod),r2(T.bil),r2(T.wart+T.bz)]);
+ });
+ if(!wb.SheetNames.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H]),"Zestawienie "+Y);
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),"Podsumowanie Wieloletnie");
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Parametr","Wartość"],["Nazwa Instalacji",S.name],["Moc Zainstalowana (kWp)",S.kwp],["Model Rozliczenia","Net-metering (opust "+S.k+" dla mikroinstalacji do 10 kW)"],["Współczynnik opustu",S.k.toFixed(2)],["Wybrany Rok Raportu",Y],["Data Wygenerowania",new Date().toLocaleString("pl-PL")],["System Analityczny","Kalkulator fotowoltaiczny"]]),"Metadane i Zasady");
+ return wb;
+}
+$("xd").onclick=async function(){
+ if(typeof XLSX==="undefined"){fmsg("Biblioteka XLSX się nie wczytała. Odśwież stronę.");return}
+ try{
+  await saveFile("Raport_Roczny_PV_"+Y+".xlsx",XLSX.write(buildWB(),{type:"array",bookType:"xlsx"}));
+  fmsg("Raport zapisany.");
+ }catch(e){fmsg(e&&e.code==="declined"?"Anulowano zapis.":"Nie udało się zapisać pliku.")}
+};
+function importWB(wb){
+ var n=0;
+ wb.SheetNames.forEach(function(nm){
+  var rows=XLSX.utils.sheet_to_json(wb.Sheets[nm],{header:1});
+  if(nm.indexOf("Zestawienie")===0)rows.slice(1).forEach(function(r){
+   var m=MP.indexOf(r[0]),y=+r[1],p=num(r[2]),i=num(r[3]),e=num(r[4]),c=num(r[13]);
+   if(m<0||!y||p===null||i===null||e===null)return;
+   if(c===null)c=S.price;
+   var k=ky(y,m),pi=num(r[5]),pe=num(r[6]);
+   if(!prevKey(k)&&pi!==null&&pe!==null)R[ky(m?y:y-1,m?m-1:11)]={p:0,i:r2(i-pi),e:r2(e-pe),c:c};
+   R[k]={p:p,i:i,e:e,c:c};n++;
+  });
+  if(nm==="Metadane i Zasady")rows.forEach(function(r){
+   if(r[0]==="Współczynnik opustu"&&num(r[1])!==null)S.k=num(r[1]);
+   if(r[0]==="Nazwa Instalacji"&&r[1])S.name=String(r[1]);
+   if(r[0]==="Moc Zainstalowana (kWp)"&&num(r[1])!==null)S.kwp=num(r[1]);
+  });
+ });
+ return n;
+}
+$("xu").onclick=function(){$("xf").click()};
+$("xf").onchange=function(){
+ var fl=this.files[0],inp=this;if(!fl)return;
+ if(typeof XLSX==="undefined"){fmsg("Biblioteka XLSX się nie wczytała. Odśwież stronę.");return}
+ var rd=new FileReader();
+ rd.onload=function(){
+  try{var n=importWB(XLSX.read(rd.result,{type:"array"}));if(!n)throw 0;save();all();fmsg("Zaimportowano odczytów: "+n+".")}
+  catch(e){fmsg("Nie znaleziono danych. Użyj pliku z arkuszem „Zestawienie ROK”.")}
+ };
+ rd.readAsArrayBuffer(fl);inp.value="";
+};
+all();
+if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
+</script>
+</body>
+</html>
