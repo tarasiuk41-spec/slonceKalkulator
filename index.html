@@ -84,10 +84,13 @@ svg text.vl{fill:var(--tx);font-weight:700}
 .kd{color:var(--mu);font-size:.88rem;margin:10px 0 12px}
 .bn{display:flex;gap:10px;align-items:center;justify-content:space-between;background:color-mix(in srgb,var(--y) 12%,var(--cd));border:1px solid color-mix(in srgb,var(--y) 40%,transparent);border-radius:20px;padding:12px 16px;margin-bottom:12px;font-size:.88rem}
 .bn button{background:var(--y);color:#1a1200;border:0;border-radius:14px;padding:9px 14px;font:800 .8rem var(--sans);white-space:nowrap}
+.clk{background:var(--hd);border-bottom:1px solid var(--ln);text-align:center;padding:8px 14px;font:700 .8rem var(--mono);letter-spacing:.04em;color:var(--mu)}
+.clk b{color:var(--tx);font-weight:800}
 </style>
 <script src="xlsx.full.min.js"></script>
 </head>
 <body>
+<div class="clk" id="clk" role="timer" aria-live="off"></div>
 <header>
 <div class="logo"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div>
 <div class="ttl">KALKULATOR PV<small>ANDROID EDITION</small></div>
@@ -150,12 +153,18 @@ svg text.vl{fill:var(--tx);font-weight:700}
 <p class="hint">Cena podstawiana jest do nowych odczytów. Bilans = współczynnik × oddanie − pobór. Ujemny bilans to energia do zapłaty.</p>
 </div>
 <div class="card" id="mpr"></div>
+<div class="card"><p class="lb"><i style="background:var(--y)"></i>Przypomnienie o odczycie</p>
+<div class="fld"><input id="rt" type="time" value="20:00" style="font-size:1.5rem"><span>godzina</span></div>
+<button class="btn" id="rb">Dodaj przypomnienie do kalendarza</button>
+<div class="msg" id="rm" style="color:var(--g)" role="status"></div>
+<p class="hint">Co miesiąc, w ostatni dzień miesiąca o wybranej godzinie, kalendarz telefonu pokaże powiadomienie „Odczyt liczników PV”. Działa też, gdy aplikacja jest zamknięta. Po pobraniu otwórz plik .ics w Kalendarzu Google i zatwierdź dodanie.</p></div>
 <div class="card"><p class="lb"><i style="background:var(--g)"></i>Dane i pliki</p>
 <button class="btn" id="xd">Pobierz raport xlsx</button>
 <button class="btn alt" id="xu">Wgraj plik xlsx</button>
 <button class="btn alt" id="xb">Pobierz kopię zapasową (.json)</button>
 <button class="btn alt" id="xr">Przywróć z kopii (.json)</button>
 <input type="file" id="xrf" accept=".json" hidden>
+<button class="btn sec" id="xc">Wyczyść wszystkie dane</button>
 <input type="file" id="xf" accept=".xlsx,.xls" hidden>
 <div class="msg" id="fm" style="color:var(--g)" role="status"></div>
 <p class="hint">Plik ma układ raportu z Monitor PV (arkusz „Zestawienie ROK”). Wgranie uzupełnia lub nadpisuje odczyty z miesięcy zawartych w pliku.</p></div>
@@ -316,7 +325,7 @@ function def(){S.yield=S.yield||1000;S.bcap=S.bcap==null?10:S.bcap;S.beta=S.beta
 async function saveFile(fn,data){
  var dl=window.claude?await claude.use("downloads"):null;
  if(dl){await dl.save({filename:fn,data:data});return}
- var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=fn;document.body.appendChild(a);a.click();a.remove();
+ var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:fn.slice(-4)===".ics"?"text/calendar":""}));a.download=fn;document.body.appendChild(a);a.click();a.remove();
 }
 function gb(id,A,B,nA,nB,u){
  var W=340,H=200,L=34,base=H-22,top=14,max=1,st=(W-L)/12,w=st*.36,s="";
@@ -350,9 +359,10 @@ function renderYX(P){
  $("yx").innerHTML=
  '<div class="card"><p class="lb"><i style="background:var(--b)"></i>Porównanie lat</p><svg id="c4" '+sv+' aria-label="Porównanie lat"></svg><div class="leg"><span><i style="background:var(--g)"></i>'+Y+'</span><span><i style="background:var(--b)"></i>'+(Y-1)+'</span></div><div class="tip" id="c4t" role="status"></div><p class="hint">'+cmp+'<br>'+ext+'</p></div>'+
  '<div class="card"><p class="lb"><i style="background:var(--y)"></i>Produkcja a oczekiwana</p><svg id="c5" '+sv+' aria-label="Produkcja rzeczywista i oczekiwana"></svg><div class="leg"><span><i style="background:var(--g)"></i>Rzeczywista</span><span><i style="background:var(--b)"></i>Oczekiwana ('+fm(S.kwp)+' kWp × '+fm(S.yield)+' kWh/kWp)</span></div><div class="tip" id="c5t" role="status"></div>'+(al||'<p class="hint">Brak alertów: produkcja mieści się w typowych granicach.</p>')+'</div>'+
- '<div class="card"><button class="btn" id="pdf">Pobierz raport PDF</button><div class="msg" id="pm" style="color:var(--g)" role="status"></div></div>';
+ '<div class="card"><button class="btn" id="pdf">Pobierz raport PDF</button><button class="btn alt" id="yxl">Pobierz raport roczny (Excel)</button><div class="msg" id="pm" style="color:var(--g)" role="status"></div></div>';
  gb("c4",A,B,String(Y),String(Y-1),"kWh");gb("c5",A,E,"Rzeczywista","Oczekiwana","kWh");
  $("pdf").onclick=pdfReport;
+ $("yxl").onclick=async function(){var m=$("pm");if(typeof XLSX==="undefined"){m.textContent="Biblioteka XLSX się nie wczytała. Odśwież stronę.";return}try{await saveFile("Raport_Roczny_PV_"+Y+".xlsx",XLSX.write(buildWB(),{type:"array",bookType:"xlsx"}));m.textContent="Raport Excel zapisany."}catch(e){m.textContent=e&&e.code==="declined"?"Anulowano zapis.":"Nie udało się zapisać pliku."}};
 }
 function renderBat(P){
  var T=totals(P,Y),st=0,gz=0;
@@ -403,6 +413,9 @@ async function pdfReport(){
    {text:"Raport roczny PV "+Y,fontSize:20,bold:true,margin:[0,0,0,4]},
    {text:S.name+" · "+fm(S.kwp)+" kWp · opust "+S.k,color:"#555",margin:[0,0,0,14]},
    {table:{widths:["*","auto"],body:kp},layout:"lightHorizontalLines",margin:[0,0,0,16]},
+   {text:"Pobór całkowity i produkcja po opuście ("+S.k+")",fontSize:13,bold:true,margin:[0,0,0,6]},
+   {svg:chartSVG(P),width:480,margin:[0,0,0,4]},
+   {text:[{text:"Pobór całkowity (zużycie)",color:"#c98a04",bold:true},"  ·  ",{text:"Produkcja po opuście",color:"#05a868",bold:true},": produkcja z falownika − oddanie × "+fm(Math.round((1-S.k)*100)/100)+". Wartości w kWh."],fontSize:9,color:"#555",margin:[0,0,0,16]},
    {text:"Zestawienie miesięczne",fontSize:13,bold:true,margin:[0,0,0,6]},
    {table:{headerRows:1,widths:["*","auto","auto","auto","auto","auto"],body:rows},layout:"lightHorizontalLines"},
    {text:"Wygenerowano: "+new Date().toLocaleDateString("pl-PL")+" · Kalkulator fotowoltaiczny",color:"#777",fontSize:8,margin:[0,16,0,0]}]};
@@ -420,6 +433,39 @@ $("xrf").onchange=function(){
  var rd=new FileReader();
  rd.onload=function(){try{var j=JSON.parse(rd.result);if(!j.R)throw 0;R=j.R;if(j.S)S=j.S;save();all();fmsg("Przywrócono kopię: odczytów "+Object.keys(R).length+".")}catch(e){fmsg("To nie jest poprawny plik kopii (.json).")}};
  rd.readAsText(fl);inp.value="";
+};
+$("rb").onclick=async function(){
+ var m=$("rm"),t=($("rt").value||"20:00").split(":"),h=+t[0],mi=+t[1],d=new Date(),z=function(n){return (n<10?"0":"")+n};
+ if(window.claude){m.textContent="W podglądzie w Claude nie da się pobrać pliku kalendarza. Użyj wersji z GitHuba lub APK.";return}
+ var l=new Date(d.getFullYear(),d.getMonth()+1,0,h,mi);if(l<d)l=new Date(d.getFullYear(),d.getMonth()+2,0,h,mi);
+ var ds=""+l.getFullYear()+z(l.getMonth()+1)+z(l.getDate())+"T"+z(h)+z(mi)+"00";
+ var ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Kalkulator PV//PL","BEGIN:VEVENT","UID:kalkulator-pv-odczyt@local","DTSTAMP:"+d.toISOString().replace(/[-:]/g,"").slice(0,15)+"Z","DTSTART:"+ds,"DURATION:PT15M","RRULE:FREQ=MONTHLY;BYMONTHDAY=-1","SUMMARY:Odczyt liczników PV","DESCRIPTION:Wpisz stany liczników 1.8.0 i 2.8.0 oraz produkcję z falownika w aplikacji Kalkulator fotowoltaiczny.","BEGIN:VALARM","TRIGGER:PT0M","ACTION:DISPLAY","DESCRIPTION:Odczyt liczników PV","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+ try{await saveFile("Przypomnienie_odczyt_PV.ics",ics);m.textContent="Plik zapisany. Otwórz go i dodaj wydarzenie do kalendarza."}catch(e){m.textContent="Nie udało się zapisać pliku."}
+};
+function chartSVG(P){
+ var W=340,H=250,L=30,base=H-22,top=36,max=1,st=(W-L)/12,w=st*.38,s="",D=[],i,MA=["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paz","lis","gru"],ff=' font-family="Helvetica" ';
+ for(i=0;i<12;i++){var p=P[ky(Y,i)];if(p){var o=Math.max(0,p.prod-p.exp*(1-S.k));D.push({c:p.cons,o:o});if(p.cons>max)max=p.cons;if(o>max)max=o}else D.push(null)}
+ [0,.5,1].forEach(function(t){var y=base-t*(base-top);s+='<line x1="'+L+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#d5dfeb"/><text'+ff+'x="'+(L-4)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="#5b6d85">'+f(max*t,0)+'</text>'});
+ D.forEach(function(r,i){
+  var x=L+i*st+st*.1;
+  s+='<text'+ff+'x="'+(x+w)+'" y="'+(H-8)+'" text-anchor="middle" font-size="8" fill="#5b6d85">'+MA[i]+'</text>';
+  if(!r)return;
+  [[r.c,"#f0a81a",x],[r.o,"#05a868",x+w+1.5]].forEach(function(b){
+   var h=b[0]/max*(base-top),cx=b[2]+w/2;
+   s+='<rect x="'+b[2]+'" y="'+(base-h)+'" width="'+w+'" height="'+h+'" rx="2" fill="'+b[1]+'"/><text'+ff+'transform="rotate(-90 '+(cx+3)+' '+(base-h-4)+')" x="'+(cx+3)+'" y="'+(base-h-4)+'" font-size="8" fill="#14262b">'+Math.round(b[0])+'</text>';
+  });
+ });
+ return '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'+s+'</svg>';
+}
+function tick(){var d=new Date();$("clk").innerHTML=d.toLocaleDateString("pl-PL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+' · <b>'+d.toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})+'</b>'}
+tick();setInterval(tick,1000);
+var cl=0,ct;
+$("xc").onclick=function(){
+ var b=this;
+ if(!cl){cl=1;b.textContent="Na pewno? Kliknij ponownie, aby usunąć wszystko";fmsg("Tej operacji nie można cofnąć. Najpierw możesz pobrać kopię (.json).");ct=setTimeout(function(){cl=0;b.textContent="Wyczyść wszystkie dane"},6000);return}
+ clearTimeout(ct);cl=0;b.textContent="Wyczyść wszystkie dane";
+ R={};S={price:1.4,k:0.8,name:"Instalacja PV Dom",kwp:3.8};SEL={};SL={};SB=undefined;CM=undefined;
+ save();all();fmsg("Wszystkie dane zostały usunięte.");
 };
 var SH=[3,5,9,12,14,14,14,12,8,5,2,2];
 function renderFc(P){
@@ -469,6 +515,10 @@ function buildWB(){
   sum.push([y,T.n,r2(T.prod),r2(T.imp),r2(T.exp),r2(T.self),pc(T.self,T.prod),r2(T.bil),r2(T.wart+T.bz)]);
  });
  if(!wb.SheetNames.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H]),"Zestawienie "+Y);
+ var T0=totals(P,Y),cr=[["Miesiąc","Rok","Pobór całkowity - zużycie (kWh)","Produkcja po opuście ("+S.k+") (kWh)","Różnica (kWh)"]],to0=0;
+ T0.m.forEach(function(i){var p=P[ky(Y,i)],o=Math.max(0,p.prod-p.exp*(1-S.k));to0+=o;cr.push([MP[i],Y,r2(p.cons),r2(o),r2(o-p.cons)])});
+ cr.push(["RAZEM",Y,r2(T0.cons),r2(to0),r2(to0-T0.cons)]);
+ if(T0.n)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cr),"Pobór vs produkcja "+Y);
  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),"Podsumowanie Wieloletnie");
  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Parametr","Wartość"],["Nazwa Instalacji",S.name],["Moc Zainstalowana (kWp)",S.kwp],["Model Rozliczenia","Net-metering (opust "+S.k+" dla mikroinstalacji do 10 kW)"],["Współczynnik opustu",S.k.toFixed(2)],["Wybrany Rok Raportu",Y],["Data Wygenerowania",new Date().toLocaleString("pl-PL")],["System Analityczny","Kalkulator fotowoltaiczny"]]),"Metadane i Zasady");
  return wb;
